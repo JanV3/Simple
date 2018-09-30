@@ -1,10 +1,10 @@
 pipeline:
-  build:
-      image: armv7/armhf-ubuntu
-      pull: true
-      commands:
-          - apt-get install cmake
-          - mkdir build
-          - cd build
-          - cmake ..
-          - make -j4
+    build:
+        image: armv7/armhf-ubuntu:latest
+        pull: true
+        commands:
+            - apt-get install cmake
+            - mkdir build
+            - cd build
+            - cmake ..
+            - make -j4
