@@ -1,0 +1,9 @@
+pipeline:
+  build:
+      image: ubuntu:latest
+      pull: true
+      commands:
+          - mkdir build
+          - cd build
+          - cmake ..
+          - make -j4
