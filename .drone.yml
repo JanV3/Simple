@@ -1,6 +1,6 @@
 pipeline:
     build:
-        image: armv7/armhf-ubuntu:latest
+        image: armhf/ubuntu:latest
         pull: true
         commands:
             - apt-get install cmake
