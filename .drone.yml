@@ -3,6 +3,7 @@ pipeline:
       image: ubuntu:latest
       pull: true
       commands:
+          - apt-get install cmake
           - mkdir build
           - cd build
           - cmake ..
