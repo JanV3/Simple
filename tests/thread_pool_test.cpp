@@ -8,14 +8,14 @@ using namespace std;
 
 int main()
 {
-    Simple::ThreadPool pool(10);
+    Simple::ThreadPool pool(5);
 
     std::vector<std::future<void>> futures;
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 2; ++i) {
         futures.push_back(pool.addTask(
             [](size_t id) {
                 size_t s = 0;
-                for (; s < 100000; ++s) {
+                for (; s < 100; ++s) {
                     ;
                 }
                 LOG_INFO << "Task ID " << id << " result = " << s;
@@ -28,15 +28,15 @@ int main()
         f.get();
     }
 
-    Simple::ThreadPool pool2(10);
+    Simple::ThreadPool pool2(5);
 
     std::vector<std::future<size_t>> futures2;
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 2; ++i) {
         futures2.push_back(pool2.addTask(
             [](size_t id) {
 
                 size_t s = 0;
-                for (; s < 100000; ++s) {
+                for (; s < 100; ++s) {
                     ;
                 }
                 LOG_INFO << "Task ID " << id << " result = " << s;

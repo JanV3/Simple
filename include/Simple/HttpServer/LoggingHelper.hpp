@@ -7,10 +7,10 @@
 
 namespace Simple::Http {
 
-    void fail(boost::system::error_code ec, char const *what)
-    {
-        std::cerr << what << ": " << ec.message() << "\n";
-    }
+inline void fail(boost::system::error_code ec, char const* what)
+{
+    std::cerr << what << ": " << ec.message() << "\n";
+}
 
 } // namespace Simple::Http
 

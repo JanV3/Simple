@@ -39,14 +39,14 @@ int main()
     Simple::ConditionBuffer<MyObject, 1000> buffer;
 
     std::thread producer([&]() {
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 5; ++i) {
             if (!buffer.put({i, -i}))
                 logFullBuffer();
         }
     });
 
     std::vector<std::thread> consumers;
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 2; ++i) {
         consumers.push_back(std::thread([&]() {
             MyObject object;
             while (buffer.get(object)) {

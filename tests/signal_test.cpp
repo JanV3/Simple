@@ -32,7 +32,7 @@ int main()
 {
     Simple::Signal<void()> signal;
     {
-        for (auto i = 0; i < 50; ++i) {
+        for (auto i = 0; i < 5; ++i) {
             Object ob1;
             signal.connect(std::bind(&Object::fun, &ob1));
             signal();
