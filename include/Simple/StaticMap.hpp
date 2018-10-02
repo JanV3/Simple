@@ -74,9 +74,7 @@ public:
         if (o.second) {
             return values_[o.first];
         }
-        new (&values_.at(size_)) mapped_type();
-        new (&keys_.at(size_)) key_type(key);
-        return values_.at(size_++);
+        throw std::out_of_range("Specified key not found");
     }
 
     void clear()
@@ -103,10 +101,10 @@ private:
     {
         for (size_t i = 0; i < size_; ++i) {
             if (key == keys_[i]) {
-                return std::pair(i, true);
+                return std::pair<size_t, bool>(i, true);
             }
         }
-        return std::pair(0, false);
+        return std::pair<size_t, bool>(0, false);
     }
 
     std::size_t size_{0};

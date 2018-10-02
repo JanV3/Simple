@@ -23,15 +23,7 @@ TEST_CASE("Insert to map using at() function")
 {
     Simple::StaticMap<std::string, std::string, 2> map;
 
-    map.at("color") = "#FFFFFF";
-    REQUIRE(map["color"] == "#FFFFFF");
-    REQUIRE(map.size() == 1);
-
-    map.at("background-color") = "#000000";
-    REQUIRE(map["background-color"] == "#000000");
-    REQUIRE(map.size() == 2);
-
-    REQUIRE_THROWS(map.at("padding") = "10px");
-    map.clear();
-    REQUIRE(map.size() == 0);
+    REQUIRE_THROWS(map.at("color"));
+    REQUIRE_NOTHROW(map["color"] = "#FFFFFF");
+    REQUIRE_NOTHROW(map.at("color") == "#FFFFFF");
 }
