@@ -14,8 +14,8 @@ int main()
 
     auto zipped = Simple::Zipper(ints, chars);
 
-    for (auto& z : zipped) {
-        std::cout << "int: " << std::get<0>(z) << " char: " << std::get<1>(z) << std::endl;
+    for (auto [i, c] : zipped) {
+        std::cout << "int: " << i << " char: " << c << std::endl;
     }
 
     return 0;

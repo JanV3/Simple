@@ -175,7 +175,7 @@ public:
             return !areSame(current, other.current);
         }
 
-        auto operator*()
+        dereferenced_type operator*()
         {
             return std::tie(current);
         }
