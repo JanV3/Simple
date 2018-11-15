@@ -29,6 +29,11 @@ public:
         return reinterpret_cast<T&>(storage_[index * TypeSize]);
     }
 
+    const T& operator[](size_t index) const
+    {
+        return reinterpret_cast<const T&>(storage_[index * TypeSize]);
+    }
+
     T& at(size_t index)
     {
         const size_t start = index * TypeSize;
@@ -36,6 +41,15 @@ public:
             throw std::out_of_range("Cannot access type on given index.");
         }
         return reinterpret_cast<T&>(storage_[index * TypeSize]);
+    }
+
+    const T& at(size_t index) const
+    {
+        const size_t start = index * TypeSize;
+        if (start > LastTypeBegin) {
+            throw std::out_of_range("Cannot access type on given index.");
+        }
+        return reinterpret_cast<const T&>(storage_[index * TypeSize]);
     }
 };
 } // namespace detail
@@ -45,11 +59,11 @@ class StaticMap {
 public:
     using key_type = Key;
     using mapped_type = T;
-    using reference = T&;
-    using const_reference = const T&;
     using pointer = T*;
     using const_pointer = const T*;
-    using value_type = std::pair<const Key, T&>;
+    using value_type = std::pair<const Key, T>;
+    using reference = value_type&;
+    using const_reference = const value_type&;
     using size_type = size_t;
 
     virtual ~StaticMap() noexcept
@@ -57,22 +71,30 @@ public:
         clear();
     }
 
-    reference operator[](const Key& key)
+    T& operator[](const Key& key)
     {
         auto o = findKey(key);
         if (o.second) {
-            return values_[o.first];
+            return std::get<1>(items_[o.first]);
         }
-        new (&values_[size_]) mapped_type();
-        new (&keys_[size_]) key_type(key);
-        return values_[size_++];
+        new (&items_[size_]) value_type(std::make_pair(key, T()));
+        return std::get<1>(items_[size_++]);
     }
 
-    reference at(const Key& key)
+    T& at(const Key& key)
     {
         auto o = findKey(key);
         if (o.second) {
-            return values_[o.first];
+            return std::get<1>(items_[o.first]);
+        }
+        throw std::out_of_range("Specified key not found");
+    }
+
+    const T& at(const Key& key) const
+    {
+        auto o = findKey(key);
+        if (o.second) {
+            return std::get<1>(items_[o.first]);
         }
         throw std::out_of_range("Specified key not found");
     }
@@ -80,8 +102,7 @@ public:
     void clear()
     {
         for (size_t i = 0; i < size_; ++i) {
-            keys_[i].~key_type();
-            values_[i].~mapped_type();
+            items_[i].~value_type();
         }
         size_ = 0;
     }
@@ -97,10 +118,10 @@ public:
     }
 
 private:
-    std::pair<size_t, bool> findKey(const Key& key)
+    std::pair<size_t, bool> findKey(const Key& key) const
     {
         for (size_t i = 0; i < size_; ++i) {
-            if (key == keys_[i]) {
+            if (key == std::get<0>(items_[i])) {
                 return std::pair<size_t, bool>(i, true);
             }
         }
@@ -108,8 +129,7 @@ private:
     }
 
     std::size_t size_{0};
-    detail::storage<mapped_type, Capacity> values_;
-    detail::storage<key_type, Capacity> keys_;
+    detail::storage<value_type, Capacity> items_;
 };
 } // namespace Simple
 
