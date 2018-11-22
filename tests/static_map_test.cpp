@@ -27,3 +27,39 @@ TEST_CASE("Insert to map using at() function")
     REQUIRE_NOTHROW(map["color"] = "#FFFFFF");
     REQUIRE_NOTHROW(map.at("color") == "#FFFFFF");
 }
+
+TEST_CASE("Initialise by initialiser_list")
+{
+    Simple::StaticMap<std::string, std::string, 10> map
+    {
+        {"color1", "red"}, {"color2", "green"}, {"color3", "blue"};
+    }
+    REQUIRE(map.size() == 3);
+    REQUIRE(map["color1"] == "red");
+    REQUIRE(map["color2"] == "green");
+    REQUIRE(map["color3"] == "blue");
+}
+
+TEST_CASE("Iterate over items")
+{
+    Simple::StaticMap<std::string, std::string, 10> map
+    {
+        {"color1", "red"}, {"color2", "green"}, {"color3", "blue"};
+    }
+
+    size_t i{0};
+    for(const auto& p : map) {
+        if(i == 0) {
+            REQUIRE(p.first == "color1");
+            REQUIRE(p.second == "red")
+        }
+        if(i == 1) {
+            REQUIRE(p.first == "color2");
+            REQUIRE(p.second == "green")
+        }
+        if(i == 2) {
+            REQUIRE(p.first == "color3");
+            REQUIRE(p.second == "blue")
+        }
+    }
+}
