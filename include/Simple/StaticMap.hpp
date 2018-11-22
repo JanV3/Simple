@@ -42,6 +42,9 @@ public:
 
 template <class Key, class T, std::size_t Capacity>
 class StaticMap {
+    class iterator {
+    };
+
 public:
     using key_type = Key;
     using mapped_type = T;
@@ -51,10 +54,37 @@ public:
     using const_pointer = const T*;
     using value_type = std::pair<const Key, T&>;
     using size_type = size_t;
+    using iterator = iterator;
+
+    StaticMap() = default;
+
+    template<class Iterator>
+    StaticMap(Iterator first, Iterator last)
+    {
+        for (; first != last; ++first) {
+            emplace(std::move(*first));
+        }
+    }
+
+    StaticMap(std::initializer_list<value_type> values)
+        : StaticMap(values.begin(), values.end())
+    {
+    }
 
     virtual ~StaticMap() noexcept
     {
         clear();
+    }
+
+    std::pair<iterator, bool> emplace(value_type&& value)
+    {
+        auto findResult = findKey(value.first);
+        if(findResult.second) {
+            return std::make_pair(iterator(*this, findResult.first));
+        } else {
+
+        }
+
     }
 
     reference operator[](const Key& key)
@@ -65,6 +95,17 @@ public:
         }
         new (&values_[size_]) mapped_type();
         new (&keys_[size_]) key_type(key);
+        return values_[size_++];
+    }
+
+    reference operator[](Key&& key)
+    {
+        auto o = findKey(key);
+        if (o.second) {
+            return values_[o.first];
+        }
+        new (&values_[size_]) mapped_type();
+        new (&keys_[size_]) key_type(std::move(key));
         return values_[size_++];
     }
 
