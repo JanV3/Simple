@@ -30,36 +30,50 @@ TEST_CASE("Insert to map using at() function")
 
 TEST_CASE("Initialise by initialiser_list")
 {
-    Simple::StaticMap<std::string, std::string, 10> map
-    {
-        {"color1", "red"}, {"color2", "green"}, {"color3", "blue"};
-    }
+    Simple::StaticMap<std::string, std::string, 10> map{
+        {"color1", "red"}, {"color2", "green"}, {"color3", "blue"}};
     REQUIRE(map.size() == 3);
     REQUIRE(map["color1"] == "red");
     REQUIRE(map["color2"] == "green");
     REQUIRE(map["color3"] == "blue");
 }
 
+TEST_CASE("Emplace")
+{
+    Simple::StaticMap<std::string, std::string, 10> map;
+
+    auto inserted = map.emplace({"color1", "red"});
+    REQUIRE(map.size() == 1);
+    REQUIRE(inserted.second);
+    REQUIRE((*inserted.first).first == "color1");
+    REQUIRE((*inserted.first).second == "red");
+
+    auto noinserted = map.emplace({"color1", "blue"});
+    REQUIRE(map.size() == 1);
+    REQUIRE_FALSE(noinserted.second);
+    REQUIRE((*inserted.first).first == "color1");
+    REQUIRE((*inserted.first).second == "red");
+}
+
 TEST_CASE("Iterate over items")
 {
-    Simple::StaticMap<std::string, std::string, 10> map
-    {
-        {"color1", "red"}, {"color2", "green"}, {"color3", "blue"};
-    }
+    Simple::StaticMap<std::string, std::string, 10> map{
+        {"color1", "red"}, {"color2", "green"}, {"color3", "blue"}};
 
     size_t i{0};
-    for(const auto& p : map) {
-        if(i == 0) {
+    for (const auto& p : map) {
+        if (i == 0) {
             REQUIRE(p.first == "color1");
-            REQUIRE(p.second == "red")
+            REQUIRE(p.second == "red");
         }
-        if(i == 1) {
+        if (i == 1) {
             REQUIRE(p.first == "color2");
-            REQUIRE(p.second == "green")
+            REQUIRE(p.second == "green");
         }
-        if(i == 2) {
+        if (i == 2) {
             REQUIRE(p.first == "color3");
-            REQUIRE(p.second == "blue")
+            REQUIRE(p.second == "blue");
         }
+        ++i;
     }
 }

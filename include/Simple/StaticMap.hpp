@@ -56,9 +56,6 @@ public:
 
 template <class Key, class T, std::size_t Capacity>
 class StaticMap {
-    class iterator {
-    };
-
 public:
     using key_type = Key;
     using mapped_type = T;
@@ -68,15 +65,68 @@ public:
     using reference = value_type&;
     using const_reference = const value_type&;
     using size_type = size_t;
-    using iterator = iterator;
+
+private:
+    using StorageType = detail::storage<value_type, Capacity>;
+
+public:
+    class iterator {
+        StaticMap& map_;
+        size_t index_{0};
+
+        iterator(StaticMap& map, size_t index)
+            : map_{map}
+            , index_{index}
+        {
+        }
+
+        friend class StaticMap;
+
+    public:
+        reference operator*()
+        {
+            return map_.storage_[index_];
+        }
+
+        reference operator->()
+        {
+            return map_.items_[index_];
+        }
+
+        iterator& operator++()
+        {
+            ++index_;
+            return *this;
+        }
+
+        iterator operator++(int)
+        {
+            auto it = *this;
+            ++index_;
+            return it;
+        }
+
+        friend bool operator==(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ == rhs.index_;
+        }
+
+        friend bool operator!=(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ != rhs.index_;
+        }
+    };
+
+public:
 
     StaticMap() = default;
 
-    template<class Iterator>
+    template <class Iterator>
     StaticMap(Iterator first, Iterator last)
     {
         for (; first != last; ++first) {
-            emplace(std::move(*first));
+            new (&storage_[size_++])
+                value_type(std::make_pair((*first).first, (*first).second));
         }
     }
 
@@ -93,39 +143,41 @@ public:
     std::pair<iterator, bool> emplace(value_type&& value)
     {
         auto findResult = findKey(value.first);
-        if(findResult.second) {
-            return std::make_pair(iterator(*this, findResult.first));
-        } else {
-
+        if (findResult.second) {
+            return std::make_pair(iterator{*this, findResult.first}, false);
         }
-
+        else {
+            new (&storage_[size_]) value_type(
+                std::make_pair(std::move(value.first), std::move(value.second)));
+            return std::make_pair(iterator{*this, size_++}, true);
+        }
     }
 
     T& operator[](const Key& key)
     {
         auto o = findKey(key);
         if (o.second) {
-            return std::get<1>(items_[o.first]);
+            return std::get<1>(storage_[o.first]);
         }
-        new (&items_[size_]) value_type(std::make_pair(key, T()));
-        return std::get<1>(items_[size_++]);
+        new (&storage_[size_]) value_type(std::make_pair(key, T()));
+        return std::get<1>(storage_[size_++]);
     }
 
     T& operator[](Key&& key)
     {
         auto o = findKey(key);
         if (o.second) {
-            return std::get<1>(items_[o.first]);
+            return std::get<1>(storage_[o.first]);
         }
-        new (&items_[size_]) value_type(std::make_pair(std::move(key), T()));
-        return std::get<1>(items_[size_++]);
+        new (&storage_[size_]) value_type(std::make_pair(std::move(key), T()));
+        return std::get<1>(storage_[size_++]);
     }
 
     T& at(const Key& key)
     {
         auto o = findKey(key);
         if (o.second) {
-            return std::get<1>(items_[o.first]);
+            return std::get<1>(storage_[o.first]);
         }
         throw std::out_of_range("Specified key not found");
     }
@@ -134,7 +186,7 @@ public:
     {
         auto o = findKey(key);
         if (o.second) {
-            return std::get<1>(items_[o.first]);
+            return std::get<1>(storage_[o.first]);
         }
         throw std::out_of_range("Specified key not found");
     }
@@ -142,7 +194,7 @@ public:
     void clear()
     {
         for (size_t i = 0; i < size_; ++i) {
-            items_[i].~value_type();
+            storage_[i].~value_type();
         }
         size_ = 0;
     }
@@ -157,11 +209,31 @@ public:
         return size_ == 0;
     }
 
+    iterator begin()
+    {
+        return iterator{*this, 0};
+    }
+
+    iterator end()
+    {
+        return iterator{*this, size_};
+    }
+
+    const iterator begin() const
+    {
+        return iterator{*this, 0};
+    }
+
+    const iterator end() const
+    {
+        return iterator{*this, size_};
+    }
+
 private:
     std::pair<size_t, bool> findKey(const Key& key) const
     {
         for (size_t i = 0; i < size_; ++i) {
-            if (key == std::get<0>(items_[i])) {
+            if (key == std::get<0>(storage_[i])) {
                 return std::pair<size_t, bool>(i, true);
             }
         }
@@ -169,7 +241,7 @@ private:
     }
 
     std::size_t size_{0};
-    detail::storage<value_type, Capacity> items_;
+    StorageType storage_;
 };
 } // namespace Simple
 
