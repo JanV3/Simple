@@ -8,15 +8,14 @@
 namespace Simple {
 namespace detail {
 
-template <class T, std::size_t Size>
+template <class T, std::size_t Capacity>
 class storage {
     static const size_t TypeSize = sizeof(T);
     static const size_t TypeAlign = alignof(T);
-    static const size_t StorageSize = Size * TypeSize;
-    static const size_t LastTypeBegin = StorageSize - TypeSize;
+    static const size_t StorageSize = Capacity * TypeSize;
 
     using StorageType = typename std::aligned_storage<TypeSize, TypeAlign>::type;
-    StorageType storage_[Size];
+    StorageType storage_[Capacity];
 
 public:
     void* data()
@@ -26,30 +25,28 @@ public:
 
     T& operator[](size_t index)
     {
-        return reinterpret_cast<T&>(storage_[index * TypeSize]);
+        return reinterpret_cast<T&>(storage_[index]);
     }
 
     const T& operator[](size_t index) const
     {
-        return reinterpret_cast<const T&>(storage_[index * TypeSize]);
+        return reinterpret_cast<const T&>(storage_[index]);
     }
 
     T& at(size_t index)
     {
-        const size_t start = index * TypeSize;
-        if (start > LastTypeBegin) {
+        if (index >= Capacity) {
             throw std::out_of_range("Cannot access type on given index.");
         }
-        return reinterpret_cast<T&>(storage_[index * TypeSize]);
+        return reinterpret_cast<T&>(storage_[index]);
     }
 
     const T& at(size_t index) const
     {
-        const size_t start = index * TypeSize;
-        if (start > LastTypeBegin) {
+        if (index >= Capacity) {
             throw std::out_of_range("Cannot access type on given index.");
         }
-        return reinterpret_cast<const T&>(storage_[index * TypeSize]);
+        return reinterpret_cast<const T&>(storage_[index]);
     }
 };
 } // namespace detail
@@ -202,6 +199,16 @@ public:
     size_type size() const
     {
         return size_;
+    }
+
+    size_type max_size() const
+    {
+        return Capacity;
+    }
+
+    size_type capacity() const
+    {
+        return Capacity;
     }
 
     bool empty() const

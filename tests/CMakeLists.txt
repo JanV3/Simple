@@ -37,8 +37,8 @@ add_test(NAME condition_buffer_test
          #WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
          #COMMAND ${CMAKE_BINARY_DIR}/bin/http_server_test)
 
-add_executable(zipper_test "zipper_test.cpp")
-target_link_libraries(zipper_test Simple)
+#add_executable(zipper_test "zipper_test.cpp")
+#target_link_libraries(zipper_test Simple)
 
 add_executable(static_map_test "static_map_test.cpp")
 add_test(NAME static_map_test

@@ -7,6 +7,9 @@ TEST_CASE("Insert to map using operator[]")
 {
     Simple::StaticMap<std::string, std::string, 2> map;
 
+    REQUIRE(map.capacity() == 2);
+    REQUIRE(map.max_size() == 2);
+
     map["color"] = "#FFFFFF";
     REQUIRE(map["color"] == "#FFFFFF");
     REQUIRE(map.size() == 1);
@@ -17,6 +20,7 @@ TEST_CASE("Insert to map using operator[]")
 
     map.clear();
     REQUIRE(map.empty());
+    REQUIRE(map.size() == 0);
 }
 
 TEST_CASE("Insert to map using at() function")
