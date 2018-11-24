@@ -56,9 +56,9 @@ class StaticMap {
 public:
     using key_type = Key;
     using mapped_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
     using value_type = std::pair<const Key, T>;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
     using reference = value_type&;
     using const_reference = const value_type&;
     using size_type = size_t;
@@ -86,9 +86,9 @@ public:
             return map_->storage_[index_];
         }
 
-        reference operator->()
+        pointer operator->()
         {
-            return map_->items_[index_];
+            return &(map_->storage_[index_]);
         }
 
         iterator& operator++()

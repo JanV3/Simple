@@ -49,14 +49,14 @@ TEST_CASE("Emplace")
     auto inserted = map.emplace({"color1", "red"});
     REQUIRE(map.size() == 1);
     REQUIRE(inserted.second);
-    REQUIRE((*inserted.first).first == "color1");
-    REQUIRE((*inserted.first).second == "red");
+    REQUIRE(inserted.first->first == "color1");
+    REQUIRE(inserted.first->second == "red");
 
     auto noinserted = map.emplace({"color1", "blue"});
     REQUIRE(map.size() == 1);
     REQUIRE_FALSE(noinserted.second);
-    REQUIRE((*inserted.first).first == "color1");
-    REQUIRE((*inserted.first).second == "red");
+    REQUIRE(inserted.first->first == "color1");
+    REQUIRE(inserted.first->second == "red");
 }
 
 TEST_CASE("Iterate over items")
