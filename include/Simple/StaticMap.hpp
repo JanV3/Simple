@@ -67,11 +67,12 @@ private:
     using StorageType = detail::storage<value_type, Capacity>;
 
 public:
-    class iterator {
-        StaticMap& map_;
+    class iterator : public std::iterator<std::random_access_iterator_tag, value_type,
+                                          size_t, pointer, reference> {
+        StaticMap* map_{nullptr};
         size_t index_{0};
 
-        iterator(StaticMap& map, size_t index)
+        explicit iterator(StaticMap* map, size_t index)
             : map_{map}
             , index_{index}
         {
@@ -82,12 +83,12 @@ public:
     public:
         reference operator*()
         {
-            return map_.storage_[index_];
+            return map_->storage_[index_];
         }
 
         reference operator->()
         {
-            return map_.items_[index_];
+            return map_->items_[index_];
         }
 
         iterator& operator++()
@@ -103,6 +104,75 @@ public:
             return it;
         }
 
+        iterator& operator--()
+        {
+            --index_;
+            return *this;
+        }
+
+        iterator operator--(int)
+        {
+            auto it = *this;
+            --index_;
+            return it;
+        }
+
+        iterator& operator+(int distance)
+        {
+            index_ += distance;
+            return *this;
+        }
+
+        iterator& operator+=(int distance)
+        {
+            index_ += distance;
+            return *this;
+        }
+
+        iterator& operator-(int distance)
+        {
+            index_ -= distance;
+            return *this;
+        }
+
+        iterator& operator-=(int distance)
+        {
+            index_ -= distance;
+            return *this;
+        }
+
+        iterator& operator=(const iterator& rhs)
+        {
+            index_ = rhs.index_;
+            map_ = rhs.map_;
+            return *this;
+        }
+
+        friend size_t operator-(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ - rhs.index_;
+        }
+
+        friend bool operator>(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ > rhs.index_;
+        }
+
+        friend bool operator>=(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ >= rhs.index_;
+        }
+
+        friend bool operator<(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ < rhs.index_;
+        }
+
+        friend bool operator<=(const iterator& lhs, const iterator& rhs)
+        {
+            return lhs.index_ <= rhs.index_;
+        }
+
         friend bool operator==(const iterator& lhs, const iterator& rhs)
         {
             return lhs.index_ == rhs.index_;
@@ -115,7 +185,6 @@ public:
     };
 
 public:
-
     StaticMap() = default;
 
     template <class Iterator>
@@ -141,12 +210,12 @@ public:
     {
         auto findResult = findKey(value.first);
         if (findResult.second) {
-            return std::make_pair(iterator{*this, findResult.first}, false);
+            return std::make_pair(iterator{this, findResult.first}, false);
         }
         else {
             new (&storage_[size_]) value_type(
                 std::make_pair(std::move(value.first), std::move(value.second)));
-            return std::make_pair(iterator{*this, size_++}, true);
+            return std::make_pair(iterator{this, size_++}, true);
         }
     }
 
@@ -218,22 +287,22 @@ public:
 
     iterator begin()
     {
-        return iterator{*this, 0};
+        return iterator{this, 0};
     }
 
     iterator end()
     {
-        return iterator{*this, size_};
+        return iterator{this, size_};
     }
 
     const iterator begin() const
     {
-        return iterator{*this, 0};
+        return iterator{this, 0};
     }
 
     const iterator end() const
     {
-        return iterator{*this, size_};
+        return iterator{this, size_};
     }
 
 private:
@@ -250,6 +319,7 @@ private:
     std::size_t size_{0};
     StorageType storage_;
 };
+
 } // namespace Simple
 
 #endif /* ifndef SIMPLE_STATIC_MAP_H */

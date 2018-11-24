@@ -81,3 +81,19 @@ TEST_CASE("Iterate over items")
         ++i;
     }
 }
+
+//TEST_CASE("StaticMap std::sort")
+//{
+    //Simple::StaticMap<std::string, std::string, 10> map;
+    //map["color1"] = "red";
+    //map["color2"] = "blue";
+
+    //REQUIRE((*map.begin()).first == "color1");
+    //REQUIRE((*(map.begin() + 1)).first == "color2");
+
+    //std::sort(map.begin(), map.end(),
+              //[](const auto& p1, const auto& p2) { return p1.second < p2.second; });
+
+    //REQUIRE((*map.begin()).first == "color2");
+    //REQUIRE((*(map.begin() + 1)).first == "color1");
+//}
