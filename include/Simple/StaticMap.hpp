@@ -3,7 +3,10 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
 #include <tuple>
+#include <type_traits>
 
 namespace Simple {
 namespace detail {
@@ -18,6 +21,8 @@ class storage {
     StorageType storage_[Capacity];
 
 public:
+    static const size_t StorageTypeSize = sizeof(StorageType);
+
     void* data()
     {
         return static_cast<void*>(&storage_);
@@ -56,7 +61,7 @@ class StaticMap {
 public:
     using key_type = Key;
     using mapped_type = T;
-    using value_type = std::pair<const Key, T>;
+    using value_type = std::pair<Key, T>;
     using pointer = value_type*;
     using const_pointer = const value_type*;
     using reference = value_type&;
@@ -117,7 +122,7 @@ public:
             return it;
         }
 
-        iterator& operator+(int distance)
+        iterator operator+(int distance)
         {
             index_ += distance;
             return *this;
@@ -129,7 +134,7 @@ public:
             return *this;
         }
 
-        iterator& operator-(int distance)
+        iterator operator-(int distance)
         {
             index_ -= distance;
             return *this;
@@ -191,8 +196,7 @@ public:
     StaticMap(Iterator first, Iterator last)
     {
         for (; first != last; ++first) {
-            new (&storage_[size_++])
-                value_type(std::make_pair((*first).first, (*first).second));
+            construct((*first).first, (*first).second);
         }
     }
 
@@ -206,16 +210,17 @@ public:
         clear();
     }
 
-    std::pair<iterator, bool> emplace(value_type&& value)
+    template <typename... Args>
+    std::pair<iterator, bool> emplace(Args&&... args)
     {
+        auto value = create(std::forward<Args>(args)...);
         auto findResult = findKey(value.first);
         if (findResult.second) {
             return std::make_pair(iterator{this, findResult.first}, false);
         }
         else {
-            new (&storage_[size_]) value_type(
-                std::make_pair(std::move(value.first), std::move(value.second)));
-            return std::make_pair(iterator{this, size_++}, true);
+            auto index = construct(std::move(value));
+            return std::make_pair(iterator{this, index}, true);
         }
     }
 
@@ -225,8 +230,8 @@ public:
         if (o.second) {
             return std::get<1>(storage_[o.first]);
         }
-        new (&storage_[size_]) value_type(std::make_pair(key, T()));
-        return std::get<1>(storage_[size_++]);
+        auto index = construct(key, T());
+        return std::get<1>(storage_[index]);
     }
 
     T& operator[](Key&& key)
@@ -235,8 +240,8 @@ public:
         if (o.second) {
             return std::get<1>(storage_[o.first]);
         }
-        new (&storage_[size_]) value_type(std::make_pair(std::move(key), T()));
-        return std::get<1>(storage_[size_++]);
+        auto index = construct(std::move(key), T());
+        return std::get<1>(storage_[index]);
     }
 
     T& at(const Key& key)
@@ -255,6 +260,24 @@ public:
             return std::get<1>(storage_[o.first]);
         }
         throw std::out_of_range("Specified key not found");
+    }
+
+    void erase(const Key& key)
+    {
+        auto o = findKey(key);
+        if (o.second) {
+            erase_impl(o.first, 1);
+        }
+    }
+
+    void erase(iterator position)
+    {
+        erase_impl(position.index_, 1);
+    }
+
+    void erase(iterator first, iterator last)
+    {
+        erase_impl(first.index_, std::distance(first, last));
     }
 
     void clear()
@@ -306,6 +329,35 @@ public:
     }
 
 private:
+    value_type create(const value_type& value) {
+        return value;
+    }
+
+    template<typename ...Args>
+    value_type create(Args&& ...args)
+    {
+        return value_type(std::forward<Args>(args)...);
+    }
+
+    void erase_impl(size_t index, size_t count)
+    {
+        auto ptr = &storage_[0];
+        auto next = index + count;
+        auto remaining = size_ - next;
+        std::move(ptr + next, ptr + next + remaining, ptr + index);
+        for (size_t i = next + remaining - count; i < size_; ++i) {
+            storage_[i].~value_type();
+        }
+        size_ -= count;
+    }
+
+    template <class... Args>
+    size_t construct(Args&&... args)
+    {
+        new (&storage_[size_]) value_type(std::forward<Args>(args)...);
+        return size_++;
+    }
+
     std::pair<size_t, bool> findKey(const Key& key) const
     {
         for (size_t i = 0; i < size_; ++i) {

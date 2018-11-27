@@ -46,13 +46,13 @@ TEST_CASE("Emplace")
 {
     Simple::StaticMap<std::string, std::string, 10> map;
 
-    auto inserted = map.emplace({"color1", "red"});
+    auto inserted = map.emplace(std::make_pair("color1", "red"));
     REQUIRE(map.size() == 1);
     REQUIRE(inserted.second);
     REQUIRE(inserted.first->first == "color1");
     REQUIRE(inserted.first->second == "red");
 
-    auto noinserted = map.emplace({"color1", "blue"});
+    auto noinserted = map.emplace("color1", "blue");
     REQUIRE(map.size() == 1);
     REQUIRE_FALSE(noinserted.second);
     REQUIRE(inserted.first->first == "color1");
@@ -82,18 +82,33 @@ TEST_CASE("Iterate over items")
     }
 }
 
-//TEST_CASE("StaticMap std::sort")
-//{
-    //Simple::StaticMap<std::string, std::string, 10> map;
-    //map["color1"] = "red";
-    //map["color2"] = "blue";
+TEST_CASE("Erase map item")
+{
+    Simple::StaticMap<std::string, std::string, 5> map{
+        {"color1", "red"},
+        {"color2", "green"},
+        {"color3", "blue"},
+        {"color4", "very long color definition that dont fit into small string "
+                   "optimisation static buffer"},
+        {"color5", "yellow"}};
 
-    //REQUIRE((*map.begin()).first == "color1");
-    //REQUIRE((*(map.begin() + 1)).first == "color2");
+    map.erase("color2");
 
-    //std::sort(map.begin(), map.end(),
-              //[](const auto& p1, const auto& p2) { return p1.second < p2.second; });
+    REQUIRE((map.begin() + 1)->first == "color3");
+}
 
-    //REQUIRE((*map.begin()).first == "color2");
-    //REQUIRE((*(map.begin() + 1)).first == "color1");
-//}
+TEST_CASE("Erase map range")
+{
+    Simple::StaticMap<std::string, std::string, 5> map{{"color1", "red"},
+                                                       {"color2", "green"},
+                                                       {"color3", "blue"},
+                                                       {"color4", "orange"},
+                                                       {"color5", "yellow"}};
+
+    map.erase(map.begin() + 1, map.begin() + 3);
+
+    REQUIRE((map.begin() + 1)->first == "color4");
+
+    map.erase(map.begin(), map.end());
+    REQUIRE(map.size() == 0);
+}
