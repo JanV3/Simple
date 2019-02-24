@@ -5,9 +5,9 @@
 #include <tuple>
 
 namespace Simple {
-namespace details {
+namespace detail {
 template <std::size_t TRem>
-class TupleForEachHelper {
+class tuple_for_each {
 public:
     template <typename TTuple, typename TFunc>
     static void exec(TTuple&& tuple, TFunc&& func)
@@ -15,136 +15,78 @@ public:
         using Tuple = typename std::decay<TTuple>::type;
         constexpr std::size_t TupleSize = std::tuple_size<Tuple>::value;
         static_assert(TRem <= TupleSize, "Incorrect parameters");
+        constexpr std::size_t Idx = TupleSize - TRem;
 
-        // Invoke function with current element
-        static const std::size_t Idx = TupleSize - TRem;
         func(std::get<Idx>(std::forward<TTuple>(tuple)));
 
-        // Compile time recursion - invoke function with the remaining elements
-        TupleForEachHelper<TRem - 1>::exec(std::forward<TTuple>(tuple), std::forward<TFunc>(func));
+        tuple_for_each<TRem - 1>::exec(std::forward<TTuple>(tuple),
+                                       std::forward<TFunc>(func));
     }
 };
 
 template <>
-class TupleForEachHelper<0> {
+class tuple_for_each<0> {
 public:
-    // Stop compile time recursion
     template <typename TTuple, typename TFunc>
-    static void exec(TTuple&& tuple, TFunc&& func)
-    {
-        static_cast<void>(tuple);
-        static_cast<void>(func);
-    }
+    static void exec(TTuple&& /*tuple*/, TFunc&& /*func*/){};
 };
 
 template <std::size_t TRem>
-class AreSameHelper {
+class are_equal {
 public:
     template <typename TTuple>
-    static bool exec(TTuple&& tuple1, TTuple&& tuple2)
+    static bool exec(const TTuple& tuple1, const TTuple& tuple2)
     {
         using Tuple = typename std::decay<TTuple>::type;
         constexpr std::size_t TupleSize = std::tuple_size<Tuple>::value;
         static_assert(TRem <= TupleSize, "Incorrect parameters");
+        static constexpr std::size_t Idx = TupleSize - TRem;
 
-        // Invoke function with current element
-        static const std::size_t Idx = TupleSize - TRem;
-
-        auto& e1 = std::get<Idx>(std::forward<TTuple>(tuple1));
-        auto& e2 = std::get<Idx>(std::forward<TTuple>(tuple2));
-
-        if (e1 != e2) {
+        if (std::get<Idx>(tuple1) != std::get<Idx>(tuple2)) {
             return false;
         }
-
-        // Compile time recursion - invoke function with the remaining elements
-        AreSameHelper<TRem - 1>::exec(std::forward<TTuple>(tuple1), std::forward<TTuple>(tuple2));
+        return are_equal<TRem - 1>::exec(tuple1, tuple2);
     }
 };
 
 template <>
-class AreSameHelper<0> {
+class are_equal<0> {
 public:
     // Stop compile time recursion
     template <typename TTuple>
-    static bool exec(TTuple&& tuple1, TTuple&& tuple2)
+    static bool exec(const TTuple& /*tuple1*/, const TTuple& /*tuple2*/)
     {
         return true;
     }
 };
-} // namespace details
-
-template <typename TTuple, typename TFunc>
-void tupleForEach(TTuple&& tuple, TFunc&& func)
-{
-    using Tuple = typename std::decay<TTuple>::type;
-    constexpr std::size_t TupleSize = std::tuple_size<Tuple>::value;
-
-    details::TupleForEachHelper<TupleSize>::exec(std::forward<TTuple>(tuple), std::forward<TFunc>(func));
-}
-
-template <typename TTuple>
-bool areSame(TTuple&& tuple1, TTuple&& tuple2)
-{
-    using Tuple = typename std::decay<TTuple>::type;
-    constexpr std::size_t TupleSize = std::tuple_size<Tuple>::value;
-
-    return details::AreSameHelper<TupleSize>::exec(std::forward<TTuple>(tuple1), std::forward<TTuple>(tuple2));
-}
-
-struct Increment {
-public:
-    template <class T>
-    void operator()(T& other)
-    {
-        other++;
-    }
-};
-
-template <size_t... n>
-struct ct_integers_list {
-    template <size_t m>
-    struct push_back {
-        typedef ct_integers_list<n..., m> type;
-    };
-};
-
-template <size_t max>
-struct ct_iota_1 {
-    typedef typename ct_iota_1<max - 1>::type::template push_back<max>::type type;
-};
-
-template <>
-struct ct_iota_1<0> {
-    typedef ct_integers_list<> type;
-};
-
-/****************************
-// dereference a subset of elements of a tuple (dereferencing the iterators)
-****************************/
-template <size_t... indices, typename Tuple>
-auto dereference_subset(const Tuple& tpl, ct_integers_list<indices...>)
-    -> decltype(std::tie(*std::get<indices - 1>(tpl)...))
-{
-    return std::tie(*std::get<indices - 1>(tpl)...);
-}
-
-/****************************
-// dereference every element of a tuple (applying operator* to each element, and returning the tuple)
-****************************/
-template <typename... Ts>
-inline auto dereference_tuple(std::tuple<Ts...>& t1)
-    -> decltype(dereference_subset(std::tuple<Ts...>(), typename ct_iota_1<sizeof...(Ts)>::type()))
-{
-    return dereference_subset(t1, typename ct_iota_1<sizeof...(Ts)>::type());
-}
+} // namespace detail
 
 template <class... Ts>
 class Zipper {
     static_assert(sizeof...(Ts) > 0, "Zipper take one ore more types.");
 
+    template <typename TTuple, typename TFunc>
+    static void tuple_for_each(TTuple&& tuple, TFunc&& func)
+    {
+        using Tuple = typename std::decay<TTuple>::type;
+        constexpr std::size_t TupleSize = std::tuple_size<Tuple>::value;
+
+        detail::tuple_for_each<TupleSize>::exec(std::forward<TTuple>(tuple),
+                                                std::forward<TFunc>(func));
+    }
+
+    template <typename TTuple>
+    static bool are_same(const TTuple& tuple1, const TTuple& tuple2)
+    {
+        using Tuple = typename std::decay<TTuple>::type;
+        constexpr std::size_t TupleSize = std::tuple_size<Tuple>::value;
+
+        return detail::are_equal<TupleSize>::exec(tuple1, tuple2);
+    }
+
 public:
     class iterator {
+
     public:
         using type = std::tuple<typename Ts::iterator...>;
         using dereferenced_type = std::tuple<typename Ts::value_type&...>;
@@ -170,23 +112,37 @@ public:
             return a;
         }
 
-        bool operator!=(const iterator& other)
+        bool operator!=(const iterator& other) const
         {
-            return !areSame(current, other.current);
+            return !are_same(current, other.current);
         }
 
-        dereferenced_type operator*()
+        auto operator*()
         {
-            return std::tie(current);
+            return deref(std::index_sequence_for<Ts...>());
         }
 
     protected:
         std::tuple<typename Ts::iterator...> current;
 
     private:
+        template <size_t... Indexes>
+        dereferenced_type deref(std::index_sequence<Indexes...>)
+        {
+            return dereferenced_type(*std::get<Indexes>(current)...);
+        }
+
+        struct Increment {
+            template <class T>
+            void operator()(T& other)
+            {
+                other++;
+            }
+        };
+
         void increment()
         {
-            tupleForEach(current, Increment());
+            tuple_for_each(current, Increment());
         }
     };
 
