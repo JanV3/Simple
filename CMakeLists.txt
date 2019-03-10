@@ -11,7 +11,6 @@ IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
 ENDIF()
 
 option(BUILD_SANITIZED "Build libraries and test with memory sanitizer enabled" OFF)
-
 if(BUILD_SANITIZED)
     message(STATUS "Enabling memory sanitizer")
     set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
@@ -27,9 +26,9 @@ target_include_directories(Simple INTERFACE "include/")
 target_link_libraries(Simple INTERFACE ${CONAN_LIBS} Threads::Threads)
 target_compile_options(Simple INTERFACE "-Wall" "-Wextra")
 
-add_library(SimpleHttpServer STATIC "src/Server.cpp")
-target_link_libraries(SimpleHttpServer Simple)
-
 # add test targets
-enable_testing()
-add_subdirectory(tests)
+option(BUILD_TESTS "Build tests of simple library" OFF)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
