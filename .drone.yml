@@ -3,7 +3,8 @@ pipeline:
         image: armhf/ubuntu:latest
         pull: true
         commands:
-            - apt-get -y install cmake pip
+            - apt-get -y update
+            - apt-get -y install cmake python3-pip
             - pip install --yes conan
             - mkdir build
             - cd build
