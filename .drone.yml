@@ -3,8 +3,10 @@ pipeline:
         image: armhf/ubuntu:latest
         pull: true
         commands:
-            - apt-get install cmake
+            - apt-get -y install cmake pip
+            - pip install --yes conan
             - mkdir build
             - cd build
+            - conan install ..
             - cmake ..
-            - make -j4
+            - make -j2
