@@ -5,7 +5,7 @@ pipeline:
         commands:
             - apt-get -y update
             - apt-get -y install cmake python3-pip
-            - pip install --yes conan
+            - pip3 install --yes conan
             - mkdir build
             - cd build
             - conan install ..
