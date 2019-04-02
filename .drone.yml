@@ -1,6 +1,6 @@
 pipeline:
     build:
-        image: armhf/ubuntu:latest
+        image: ubuntu:latest
         pull: true
         commands:
             - apt-get -y update
@@ -10,4 +10,4 @@ pipeline:
             - cd build
             - conan install ..
             - cmake ..
-            - make -j2
+            - make
