@@ -30,3 +30,7 @@ add_test(zipper_test zipper_test)
 add_executable(static_map_test "static_map_test.cpp")
 target_link_libraries(static_map_test Simple)
 add_test(static_map_test static_map_test)
+
+add_executable(serializer_test "serializer_test.cpp")
+target_link_libraries(serializer_test Simple)
+add_test(serializer_test serializer_test)

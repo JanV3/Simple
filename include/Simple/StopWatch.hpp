@@ -32,12 +32,12 @@ public:
     void print()
     {
         auto diff = ClockType::now() - begin_;
-        std::cout << "Duration of '" << name_
-                  << "' = " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << " ms"
-                  << std::endl;
+        std::cout << "Duration of '" << name_ << "' = "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+                  << " ms" << std::endl;
         printed_ = true;
     }
 };
-}
+} // namespace Simple
 
 #endif /* ifndef SIMPLE_STOPWATCH_HPP */
